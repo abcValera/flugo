@@ -34,3 +34,15 @@ func RandomEmail() string {
 func RandomPassword() string {
 	return RandomString(12)
 }
+
+func RandomFullname() string {
+	return RandomString(6) + " " + RandomString(6)
+}
+
+func RandomStatus() string {
+	return RandomString(6)
+}
+
+func RandomBio() string {
+	return RandomString(30)
+}
