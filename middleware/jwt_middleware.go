@@ -14,7 +14,7 @@ const (
 	authPayloadKey = "auth_payload"
 )
 
-func NewAuthMiddleware(tokeMaker token.Maker) func(next fiber.Handler) fiber.Handler {
+func NewAuthMiddleware(tokenMaker token.Maker) func(next fiber.Handler) fiber.Handler {
 	return func(next fiber.Handler) fiber.Handler {
 		return func(c *fiber.Ctx) error {
 			authHeader := c.Get(authHeaderKey)
