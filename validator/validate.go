@@ -1,7 +1,7 @@
 package validator
 
 import (
-	"github.com/go-playground/validator"
+	v "github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -10,11 +10,11 @@ type CustomValidator interface {
 }
 
 type FlugoValidator struct {
-	validate *validator.Validate
+	Validator *v.Validate
 }
 
 func (fv *FlugoValidator) Validate(s interface{}) error {
-	if err := fv.validate.Struct(s); err != nil {
+	if err := fv.Validator.Struct(s); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	return nil
