@@ -5,12 +5,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type CustomValidator struct {
-	validator *validator.Validate
+type CustomValidator interface {
+	Validate(s interface{}) error
 }
 
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
+type FlugoValidator struct {
+	validate *validator.Validate
+}
+
+func (fv *FlugoValidator) Validate(s interface{}) error {
+	if err := fv.validate.Struct(s); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	return nil
