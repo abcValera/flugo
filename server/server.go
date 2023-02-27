@@ -1,5 +1,12 @@
 package server
 
-import "github.com/abc_valera/flugo/token"
+func Start() {
+	initConfig()
 
-var tokenMaker token.Maker
+	initDatabase()
+	initMigration()
+
+	initServer()
+
+	app.Listen(config.PORT)
+}
