@@ -27,9 +27,9 @@ func initRoutes() {
 	auth.Delete("/users", deleteUser)
 	// jokes
 	auth.Post("/jokes", createJoke)
-	// auth.PUT("/jokes/title/:id", updateJokeTitle)
-	// auth.PUT("/jokes/text/:id", updateJokeText)
-	// auth.PUT("/jokes/explanation/:id", updateJokeExplanation)
+	auth.Put("/jokes/title/:id", updateJokeTitle)
+	auth.Put("/jokes/text/:id", updateJokeText)
+	auth.Put("/jokes/explanation/:id", updateJokeExplanation)
 	auth.Delete("/jokes/:id", deleteJoke)
 	auth.Delete("/jokes", deleteJokesByAuthor)
 

@@ -111,8 +111,94 @@ func listJokes(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(jokes)
 }
 
-// UPDATE REQUESTS
-//TODO
+// PUT REQUESTS
+
+type updateJokeTitleRequest struct {
+	Title string `json:"title" validate:"required"`
+}
+
+func updateJokeTitle(c *fiber.Ctx) error {
+	req := new(updateJokeTitleRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	id, err := c.ParamsInt("id")
+	if id == 0 || err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	joke, err := db.UpdateJokeTitle(c.Context(), database.UpdateJokeTitleParams{
+		ID:    int32(id),
+		Title: req.Title,
+	})
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(joke)
+}
+
+type updateJokeTextRequest struct {
+	Text string `json:"text" validate:"required"`
+}
+
+func updateJokeText(c *fiber.Ctx) error {
+	req := new(updateJokeTextRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	id, err := c.ParamsInt("id")
+	if id == 0 || err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	joke, err := db.UpdateJokeText(c.Context(), database.UpdateJokeTextParams{
+		ID:   int32(id),
+		Text: req.Text,
+	})
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(joke)
+}
+
+type updateJokeExplanationRequest struct {
+	Explanation string `json:"explanation" validate:"required"`
+}
+
+func updateJokeExplanation(c *fiber.Ctx) error {
+	req := new(updateJokeExplanationRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	id, err := c.ParamsInt("id")
+	if id == 0 || err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	joke, err := db.UpdateJokeExplanation(c.Context(), database.UpdateJokeExplanationParams{
+		ID:          int32(id),
+		Explanation: req.Explanation,
+	})
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(joke)
+}
 
 // DELETE REQUESTS
 func deleteJoke(c *fiber.Ctx) error {
