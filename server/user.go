@@ -136,11 +136,11 @@ func verifyEmail(c *fiber.Ctx) error {
 	_, err := db.GetUserByEmail(c.Context(), req.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fiber.NewError(fiber.StatusNoContent, "Email is not registered yet")
+			return fiber.NewError(fiber.StatusOK, "Email is not registered yet")
 		}
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	return fiber.NewError(fiber.StatusOK)
+	return fiber.NewError(fiber.StatusBadRequest, "Email is registered already")
 }
 
 func listUsers(c *fiber.Ctx) error {
