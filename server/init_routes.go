@@ -7,7 +7,7 @@ func initRoutes() {
 	// users
 	app.Post("/users", createUser)
 	app.Post("/users/login", loginUser)
-	app.Get("/users/verify/email", verifyEmail)
+	app.Post("/users/verify/email", verifyEmail)
 	app.Get("/users", listUsers)
 	// jokes
 	app.Get("/jokes", listJokes)
