@@ -120,6 +120,29 @@ func loginUser(c *fiber.Ctx) error {
 
 // GET REQUESTS
 
+type verifyEmailRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+func verifyEmail(c *fiber.Ctx) error {
+	req := new(verifyEmailRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	_, err := db.GetUserByEmail(c.Context(), req.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fiber.NewError(fiber.StatusNoContent, "Email is not registered yet")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return fiber.NewError(fiber.StatusOK)
+}
+
 func listUsers(c *fiber.Ctx) error {
 	first, err := strconv.Atoi(c.Query("first"))
 	if err != nil {
