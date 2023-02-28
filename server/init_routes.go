@@ -33,7 +33,7 @@ func initRoutes() {
 	auth.Delete("/jokes/:id", deleteJoke)
 	auth.Delete("/jokes", deleteJokesByAuthor)
 
-	// // !DANGEROUS FUNCTION FOR TEST ONLY!
-	// app.Delete("/users_ALL", deleteAllUsers)
-	// app.Delete("/jokes_ALL", deleteAllJokes)
+	// !DANGEROUS FUNCTION FOR TEST ONLY!
+	app.Delete("/users_ALL", deleteAllUsers)
+	app.Delete("/jokes_ALL", deleteAllJokes)
 }

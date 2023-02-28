@@ -221,3 +221,12 @@ func deleteJokesByAuthor(c *fiber.Ctx) error {
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+// !DANGEROUS FUNCTION FOR TEST ONLY!
+func deleteAllJokes(c *fiber.Ctx) error {
+	err := db.DeleteAllJokes(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.SendStatus(fiber.StatusNoContent)
+}
