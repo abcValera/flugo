@@ -177,7 +177,7 @@ func getMe(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(newUserResponse(user))
 }
 
-// UPDATE REQUESTS
+// PUT REQUESTS
 
 type updateUserPasswordRequest struct {
 	OldPassword string `json:"old_password" validate:"required"`
