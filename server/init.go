@@ -26,14 +26,6 @@ var (
 	validate   fv.CustomValidator
 )
 
-func initServer() {
-	app = fiber.New()
-	initTokenMaker()
-	initRequestLogger()
-	initValidator()
-	initRoutes()
-}
-
 func initConfig() {
 	c, err := cnfg.LoadConfig(".")
 	if err != nil {
@@ -67,6 +59,27 @@ func initMigration() {
 	err = m.Up()
 	if err != nil {
 		log.Println("migration up failed: ", err)
+	}
+}
+
+func initServer() {
+	// returns instance of fiber.App with a custom error handler
+	app = fiber.New(fiber.Config{
+		ErrorHandler: initCustomErrorHandler(),
+	})
+
+	initTokenMaker()
+	initRequestLogger()
+	initValidator()
+	initRoutes()
+}
+
+func initCustomErrorHandler() func(c *fiber.Ctx, err error) error {
+	return func(c *fiber.Ctx, err error) error {
+		e := err.(*fiber.Error)
+		return c.Status(e.Code).JSON(fiber.Map{
+			"message": e.Message,
+		})
 	}
 }
 
