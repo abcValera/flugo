@@ -20,10 +20,10 @@ func initRoutes() {
 	auth.Use(authMiddleware)
 	// users
 	auth.Get("/users/me", getMe)
-	// auth.PUT("/users/password", updateUserPassword)
-	// auth.PUT("/users/fullname", updateUserFullname)
-	// auth.PUT("/users/status", updateUserStatus)
-	// auth.PUT("/users/bio", updateUserBio)
+	auth.Put("/users/password", updateUserPassword)
+	auth.Put("/users/fullname", updateUserFullname)
+	auth.Put("/users/status", updateUserStatus)
+	auth.Put("/users/bio", updateUserBio)
 	auth.Delete("/users", deleteUser)
 	// jokes
 	auth.Post("/jokes", createJoke)

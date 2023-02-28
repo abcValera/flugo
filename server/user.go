@@ -178,7 +178,117 @@ func getMe(c *fiber.Ctx) error {
 }
 
 // UPDATE REQUESTS
-// TODO
+
+type updateUserPasswordRequest struct {
+	OldPassword string `json:"old_password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+}
+
+func updateUserPassword(c *fiber.Ctx) error {
+	req := new(updateUserPasswordRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	sessID := c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID
+	oldUser, err := db.GetUserByID(c.Context(), sessID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := utils.CheckPassword(req.OldPassword, oldUser.HashedPassword); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return fiber.NewError(http.StatusInternalServerError, err.Error())
+	}
+
+	user, err := db.UpdateUserPassword(c.Context(), database.UpdateUserPasswordParams{
+		ID:             int32(sessID),
+		HashedPassword: hashedPassword,
+	})
+	if err != nil {
+		return fiber.NewError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusBadRequest).JSON(newUserResponse(user))
+}
+
+type updateUserFullnameRequest struct {
+	Fullname string `json:"fullname" validate:"required"`
+}
+
+func updateUserFullname(c *fiber.Ctx) error {
+	req := new(updateUserFullnameRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	user, err := db.UpdateUserFullname(c.Context(), database.UpdateUserFullnameParams{
+		ID:       c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID,
+		Fullname: req.Fullname,
+	})
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusBadRequest).JSON(newUserResponse(user))
+}
+
+type updateUserStatusRequest struct {
+	Status string `json:"status" validate:"required"`
+}
+
+func updateUserStatus(c *fiber.Ctx) error {
+	req := new(updateUserStatusRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	user, err := db.UpdateUserStatus(c.Context(), database.UpdateUserStatusParams{
+		ID:     c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID,
+		Status: req.Status,
+	})
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(newUserResponse(user))
+}
+
+type updateUserBioRequest struct {
+	Bio string `json:"bio" validate:"required"`
+}
+
+func updateUserBio(c *fiber.Ctx) error {
+	req := new(updateUserBioRequest)
+	if err := c.BodyParser(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if err := validate.Validate(req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	user, err := db.UpdateUserBio(c.Context(), database.UpdateUserBioParams{
+		ID:  c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID,
+		Bio: req.Bio,
+	})
+	if err != nil {
+		return fiber.NewError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(newUserResponse(user))
+}
 
 // DELETE REQUESTS
 
