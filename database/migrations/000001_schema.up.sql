@@ -3,6 +3,7 @@ CREATE TABLE "users" (
   "username" varchar UNIQUE NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "hashed_password" varchar NOT NULL,
+  "avatar" varchar NOT NULL,
   "fullname" varchar NOT NULL,
   "bio" varchar NOT NULL,
   "status" varchar NOT NULL,
