@@ -76,9 +76,14 @@ func initServer() {
 
 func initCustomErrorHandler() func(c *fiber.Ctx, err error) error {
 	return func(c *fiber.Ctx, err error) error {
-		e := err.(*fiber.Error)
-		return c.Status(e.Code).JSON(fiber.Map{
-			"message": e.Message,
+		if e, ok := err.(*fiber.Error); ok {
+			return c.Status(e.Code).JSON(fiber.Map{
+				"message": e.Message,
+			})
+		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": err,
 		})
 	}
 }
