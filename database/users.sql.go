@@ -14,18 +14,20 @@ INSERT INTO users(
     username,
     email,
     hashed_password,
+    avatar,
     fullname,
     status,
     bio
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, username, email, hashed_password, fullname, bio, status, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7
+) RETURNING id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at
 `
 
 type CreateUserParams struct {
 	Username       string `json:"username"`
 	Email          string `json:"email"`
 	HashedPassword string `json:"hashed_password"`
+	Avatar         string `json:"avatar"`
 	Fullname       string `json:"fullname"`
 	Status         string `json:"status"`
 	Bio            string `json:"bio"`
@@ -36,6 +38,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Username,
 		arg.Email,
 		arg.HashedPassword,
+		arg.Avatar,
 		arg.Fullname,
 		arg.Status,
 		arg.Bio,
@@ -46,6 +49,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
@@ -77,7 +81,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, hashed_password, fullname, bio, status, created_at, updated_at FROM users
+SELECT id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at FROM users
 WHERE email = $1
 `
 
@@ -89,6 +93,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
@@ -100,7 +105,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 
 const getUserByID = `-- name: GetUserByID :one
 
-SELECT id, username, email, hashed_password, fullname, bio, status, created_at, updated_at FROM users
+SELECT id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at FROM users
 WHERE id = $1
 `
 
@@ -113,6 +118,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
@@ -123,7 +129,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 }
 
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, username, email, hashed_password, fullname, bio, status, created_at, updated_at FROM users
+SELECT id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at FROM users
 WHERE username = $1
 `
 
@@ -135,6 +141,7 @@ func (q *Queries) GetUserByName(ctx context.Context, username string) (User, err
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
@@ -145,7 +152,7 @@ func (q *Queries) GetUserByName(ctx context.Context, username string) (User, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, email, hashed_password, fullname, bio, status, created_at, updated_at FROM users
+SELECT id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at FROM users
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -170,6 +177,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.Username,
 			&i.Email,
 			&i.HashedPassword,
+			&i.Avatar,
 			&i.Fullname,
 			&i.Bio,
 			&i.Status,
@@ -189,11 +197,41 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 	return items, nil
 }
 
+const updateUserAvatar = `-- name: UpdateUserAvatar :one
+UPDATE users
+SET avatar = $2
+WHERE id = $1
+RETURNING id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at
+`
+
+type UpdateUserAvatarParams struct {
+	ID     int32  `json:"id"`
+	Avatar string `json:"avatar"`
+}
+
+func (q *Queries) UpdateUserAvatar(ctx context.Context, arg UpdateUserAvatarParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUserAvatar, arg.ID, arg.Avatar)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.HashedPassword,
+		&i.Avatar,
+		&i.Fullname,
+		&i.Bio,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateUserBio = `-- name: UpdateUserBio :one
 UPDATE users
 SET bio = $2
 WHERE id = $1
-RETURNING id, username, email, hashed_password, fullname, bio, status, created_at, updated_at
+RETURNING id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at
 `
 
 type UpdateUserBioParams struct {
@@ -209,6 +247,7 @@ func (q *Queries) UpdateUserBio(ctx context.Context, arg UpdateUserBioParams) (U
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
@@ -222,7 +261,7 @@ const updateUserFullname = `-- name: UpdateUserFullname :one
 UPDATE users
 SET fullname = $2
 WHERE id = $1
-RETURNING id, username, email, hashed_password, fullname, bio, status, created_at, updated_at
+RETURNING id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at
 `
 
 type UpdateUserFullnameParams struct {
@@ -238,6 +277,7 @@ func (q *Queries) UpdateUserFullname(ctx context.Context, arg UpdateUserFullname
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
@@ -252,7 +292,7 @@ const updateUserPassword = `-- name: UpdateUserPassword :one
 UPDATE users
 SET hashed_password = $2
 WHERE id = $1
-RETURNING id, username, email, hashed_password, fullname, bio, status, created_at, updated_at
+RETURNING id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at
 `
 
 type UpdateUserPasswordParams struct {
@@ -269,6 +309,7 @@ func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPassword
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
@@ -282,7 +323,7 @@ const updateUserStatus = `-- name: UpdateUserStatus :one
 UPDATE users
 SET status = $2
 WHERE id = $1
-RETURNING id, username, email, hashed_password, fullname, bio, status, created_at, updated_at
+RETURNING id, username, email, hashed_password, avatar, fullname, bio, status, created_at, updated_at
 `
 
 type UpdateUserStatusParams struct {
@@ -298,6 +339,7 @@ func (q *Queries) UpdateUserStatus(ctx context.Context, arg UpdateUserStatusPara
 		&i.Username,
 		&i.Email,
 		&i.HashedPassword,
+		&i.Avatar,
 		&i.Fullname,
 		&i.Bio,
 		&i.Status,
