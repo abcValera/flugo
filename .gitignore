@@ -17,3 +17,6 @@ go.work
 
 # VSCode directory
 .vscode/
+
+# Uploads directory
+uploads/
