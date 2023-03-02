@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -216,6 +217,31 @@ func updateUserPassword(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusBadRequest).JSON(newUserResponse(user))
+}
+
+func updateUserAvatar(c *fiber.Ctx) error {
+	userID := c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID
+	filename := fmt.Sprintf("/uploads/images/avatars/%d.png", userID)
+
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	err = c.SaveFile(file, "."+filename)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	user, err := db.UpdateUserAvatar(c.Context(), database.UpdateUserAvatarParams{
+		ID:     userID,
+		Avatar: filename,
+	})
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(user)
 }
 
 type updateUserFullnameRequest struct {

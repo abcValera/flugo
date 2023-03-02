@@ -21,6 +21,7 @@ func initRoutes() {
 	// users
 	auth.Get("/users/me", getMe)
 	auth.Put("/users/password", updateUserPassword)
+	auth.Post("/uploads/images/avatars", updateUserAvatar)
 	auth.Put("/users/fullname", updateUserFullname)
 	auth.Put("/users/status", updateUserStatus)
 	auth.Put("/users/bio", updateUserBio)
