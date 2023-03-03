@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/abc_valera/flugo/utils"
+	"github.com/abc_valera/flugo/internal/utils"
 	"github.com/stretchr/testify/require"
 )
 
