@@ -2,7 +2,7 @@
 init_migrations:
 	migrate create -ext sql -dir database/migrations -seq schema
 generate_sqlc:
-	sqlc generate
+	(cd ./internal/database/config;sqlc generate)
 
 # Database commands
 flugo-db:
@@ -22,5 +22,7 @@ flugo-api:
 	docker run --rm --name flugo --network flugo-net -p 3000:3000 -e DATABASE_URL="postgresql://abc_valera:abc_valera@flugo-db:5432/flugo?sslmode=disable" flugo:latest
 
 # Go commands
+build:
+	go build -o flugo cmd/api/main.go
 test:
 	go test -cover -v -cover ./...
