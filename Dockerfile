@@ -11,6 +11,7 @@ WORKDIR /src
 COPY --from=builder /src/flugo .
 COPY api.env .
 COPY ./database/migrations ./database/migrations
+COPY ./uploads ./uploads
 
 EXPOSE 3000
 CMD [ "./flugo" ]
