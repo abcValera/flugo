@@ -4,6 +4,8 @@ import "github.com/abc_valera/flugo/middleware"
 
 func initRoutes() {
 	// for unauthorized user
+	// static
+	app.Static("/uploads", "./uploads")
 	// users
 	app.Post("/users", createUser)
 	app.Post("/users/login", loginUser)
