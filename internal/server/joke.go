@@ -16,21 +16,21 @@ import (
 type createJokeRequest struct {
 	Title       string `json:"title" validate:"required"`
 	Text        string `json:"text" validate:"required"`
-	Explanation string `json:"explanation" validate:"required"`
+	Explanation string `json:"explanation"`
 }
 
-func createJoke(c *fiber.Ctx) error {
+func (s *Server) createJoke(c *fiber.Ctx) error {
 	req := new(createJokeRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
+	if err := s.validator.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	authPayload := c.Locals(middleware.AuthPayloadKey).(*token.Payload)
 
-	joke, err := db.CreateJoke(c.Context(), database.CreateJokeParams{
+	joke, err := s.db.CreateJoke(c.Context(), database.CreateJokeParams{
 		Author:      authPayload.Username,
 		Title:       req.Title,
 		Text:        req.Text,
@@ -45,13 +45,13 @@ func createJoke(c *fiber.Ctx) error {
 
 // GET REQUESTS
 
-func getJoke(c *fiber.Ctx) error {
+func (s *Server) getJoke(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if id == 0 || err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	joke, err := db.GetJoke(c.Context(), int32(id))
+	joke, err := s.db.GetJoke(c.Context(), int32(id))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -61,7 +61,7 @@ func getJoke(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(joke)
 }
 
-func listJokesByAuthor(c *fiber.Ctx) error {
+func (s *Server) listJokesByAuthor(c *fiber.Ctx) error {
 	log.Println("Here")
 
 	queryUsername := c.Params("username")
@@ -77,7 +77,7 @@ func listJokesByAuthor(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	jokes, err := db.ListJokesByAuthor(c.Context(), database.ListJokesByAuthorParams{
+	jokes, err := s.db.ListJokesByAuthor(c.Context(), database.ListJokesByAuthorParams{
 		Author: queryUsername,
 		Limit:  int32(size),
 		Offset: int32(first),
@@ -91,7 +91,7 @@ func listJokesByAuthor(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(jokes)
 }
 
-func listJokes(c *fiber.Ctx) error {
+func (s *Server) listJokes(c *fiber.Ctx) error {
 	first, err := strconv.Atoi(c.Query("first"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -101,7 +101,7 @@ func listJokes(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	jokes, err := db.ListJokes(c.Context(), database.ListJokesParams{
+	jokes, err := s.db.ListJokes(c.Context(), database.ListJokesParams{
 		Limit:  int32(size),
 		Offset: int32(first),
 	})
@@ -114,15 +114,12 @@ func listJokes(c *fiber.Ctx) error {
 // PUT REQUESTS
 
 type updateJokeTitleRequest struct {
-	Title string `json:"title" validate:"required"`
+	Title string `json:"title"`
 }
 
-func updateJokeTitle(c *fiber.Ctx) error {
+func (s *Server) updateJokeTitle(c *fiber.Ctx) error {
 	req := new(updateJokeTitleRequest)
 	if err := c.BodyParser(req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	if err := validate.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
@@ -131,7 +128,7 @@ func updateJokeTitle(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	joke, err := db.UpdateJokeTitle(c.Context(), database.UpdateJokeTitleParams{
+	joke, err := s.db.UpdateJokeTitle(c.Context(), database.UpdateJokeTitleParams{
 		ID:    int32(id),
 		Title: req.Title,
 	})
@@ -143,15 +140,12 @@ func updateJokeTitle(c *fiber.Ctx) error {
 }
 
 type updateJokeTextRequest struct {
-	Text string `json:"text" validate:"required"`
+	Text string `json:"text"`
 }
 
-func updateJokeText(c *fiber.Ctx) error {
+func (s *Server) updateJokeText(c *fiber.Ctx) error {
 	req := new(updateJokeTextRequest)
 	if err := c.BodyParser(req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	if err := validate.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
@@ -160,7 +154,7 @@ func updateJokeText(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	joke, err := db.UpdateJokeText(c.Context(), database.UpdateJokeTextParams{
+	joke, err := s.db.UpdateJokeText(c.Context(), database.UpdateJokeTextParams{
 		ID:   int32(id),
 		Text: req.Text,
 	})
@@ -172,15 +166,12 @@ func updateJokeText(c *fiber.Ctx) error {
 }
 
 type updateJokeExplanationRequest struct {
-	Explanation string `json:"explanation" validate:"required"`
+	Explanation string `json:"explanation"`
 }
 
-func updateJokeExplanation(c *fiber.Ctx) error {
+func (s *Server) updateJokeExplanation(c *fiber.Ctx) error {
 	req := new(updateJokeExplanationRequest)
 	if err := c.BodyParser(req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	if err := validate.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
@@ -189,7 +180,7 @@ func updateJokeExplanation(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	joke, err := db.UpdateJokeExplanation(c.Context(), database.UpdateJokeExplanationParams{
+	joke, err := s.db.UpdateJokeExplanation(c.Context(), database.UpdateJokeExplanationParams{
 		ID:          int32(id),
 		Explanation: req.Explanation,
 	})
@@ -201,21 +192,22 @@ func updateJokeExplanation(c *fiber.Ctx) error {
 }
 
 // DELETE REQUESTS
-func deleteJoke(c *fiber.Ctx) error {
+
+func (s *Server) deleteJoke(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if id == 0 || err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	err = db.DeleteJoke(c.Context(), int32(id))
+	err = s.db.DeleteJoke(c.Context(), int32(id))
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func deleteJokesByAuthor(c *fiber.Ctx) error {
-	err := db.DeleteJokesByAuthor(c.Context(), c.Locals(middleware.AuthPayloadKey).(*token.Payload).Username)
+func (s *Server) deleteJokesByAuthor(c *fiber.Ctx) error {
+	err := s.db.DeleteJokesByAuthor(c.Context(), c.Locals(middleware.AuthPayloadKey).(*token.Payload).Username)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -223,8 +215,8 @@ func deleteJokesByAuthor(c *fiber.Ctx) error {
 }
 
 // !DANGEROUS FUNCTION FOR TEST ONLY!
-func deleteAllJokes(c *fiber.Ctx) error {
-	err := db.DeleteAllJokes(c.Context())
+func (s *Server) deleteAllJokes(c *fiber.Ctx) error {
+	err := s.db.DeleteAllJokes(c.Context())
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}

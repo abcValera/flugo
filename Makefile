@@ -11,11 +11,11 @@ build_flugo-api_image:
 	docker build -f ./deploy/Dockerfile -t flugo:latest .
 
 # Go commands
-build:
-	go build -o flugo cmd/api/main.go
+build_flugo-api:
+	go build -o build/flugo cmd/api/main.go
 test:
 	go test -cover -v -cover ./...
-flugo-api_local:
+run_flugo-api_local:
 	go build -o flugo cmd/api/main.go;./flugo
 
 # Database commands

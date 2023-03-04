@@ -48,12 +48,12 @@ type createUserRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
-func createUser(c *fiber.Ctx) error {
+func (s *Server) createUser(c *fiber.Ctx) error {
 	req := new(createUserRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
+	if err := s.validator.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
@@ -62,7 +62,7 @@ func createUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	user, err := db.CreateUser(c.Context(), database.CreateUserParams{
+	user, err := s.db.CreateUser(c.Context(), database.CreateUserParams{
 		Username:       req.Username,
 		Email:          req.Email,
 		HashedPassword: hashedPassword,
@@ -85,16 +85,16 @@ type loginUserResponse struct {
 	User        userResponse `json:"user"`
 }
 
-func loginUser(c *fiber.Ctx) error {
+func (s *Server) loginUser(c *fiber.Ctx) error {
 	req := new(loginUserRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
+	if err := s.validator.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	user, err := db.GetUserByEmail(c.Context(), req.Email)
+	user, err := s.db.GetUserByEmail(c.Context(), req.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
@@ -107,7 +107,7 @@ func loginUser(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusUnauthorized, err.Error())
 	}
 
-	accessToken, err := tokenMaker.CreateToken(user.ID, user.Username, user.Email, config.AccessTokenDuration)
+	accessToken, err := s.tokenMaker.CreateToken(user.ID, user.Username, user.Email, s.config.AccessTokenDuration)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -125,16 +125,16 @@ type verifyEmailRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
-func verifyEmail(c *fiber.Ctx) error {
+func (s *Server) verifyEmail(c *fiber.Ctx) error {
 	req := new(verifyEmailRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
+	if err := s.validator.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	_, err := db.GetUserByEmail(c.Context(), req.Email)
+	_, err := s.db.GetUserByEmail(c.Context(), req.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fiber.NewError(fiber.StatusOK, "Email is not registered yet")
@@ -144,7 +144,7 @@ func verifyEmail(c *fiber.Ctx) error {
 	return fiber.NewError(fiber.StatusBadRequest, "Email is registered already")
 }
 
-func listUsers(c *fiber.Ctx) error {
+func (s *Server) listUsers(c *fiber.Ctx) error {
 	first, err := strconv.Atoi(c.Query("first"))
 	if err != nil {
 		fiber.NewError(http.StatusBadRequest, err.Error())
@@ -154,7 +154,7 @@ func listUsers(c *fiber.Ctx) error {
 		fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	users, err := db.ListUsers(c.Context(), database.ListUsersParams{
+	users, err := s.db.ListUsers(c.Context(), database.ListUsersParams{
 		Limit:  int32(size),
 		Offset: int32(first),
 	})
@@ -170,8 +170,8 @@ func listUsers(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(usersResponse)
 }
 
-func getMe(c *fiber.Ctx) error {
-	user, err := db.GetUserByID(c.Context(), c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID)
+func (s *Server) getMe(c *fiber.Ctx) error {
+	user, err := s.db.GetUserByID(c.Context(), c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
@@ -185,17 +185,17 @@ type updateUserPasswordRequest struct {
 	NewPassword string `json:"new_password" validate:"required"`
 }
 
-func updateUserPassword(c *fiber.Ctx) error {
+func (s *Server) updateUserPassword(c *fiber.Ctx) error {
 	req := new(updateUserPasswordRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
+	if err := s.validator.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	sessID := c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID
-	oldUser, err := db.GetUserByID(c.Context(), sessID)
+	oldUser, err := s.db.GetUserByID(c.Context(), sessID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -208,7 +208,7 @@ func updateUserPassword(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
 
-	user, err := db.UpdateUserPassword(c.Context(), database.UpdateUserPasswordParams{
+	user, err := s.db.UpdateUserPassword(c.Context(), database.UpdateUserPasswordParams{
 		ID:             int32(sessID),
 		HashedPassword: hashedPassword,
 	})
@@ -216,10 +216,10 @@ func updateUserPassword(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusBadRequest).JSON(newUserResponse(user))
+	return c.Status(fiber.StatusCreated).JSON(newUserResponse(user))
 }
 
-func updateUserAvatar(c *fiber.Ctx) error {
+func (s *Server) updateUserAvatar(c *fiber.Ctx) error {
 	userID := c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID
 	filename := fmt.Sprintf("/uploads/images/avatars/%d.png", userID)
 
@@ -233,7 +233,7 @@ func updateUserAvatar(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	user, err := db.UpdateUserAvatar(c.Context(), database.UpdateUserAvatarParams{
+	user, err := s.db.UpdateUserAvatar(c.Context(), database.UpdateUserAvatarParams{
 		ID:     userID,
 		Avatar: filename,
 	})
@@ -245,19 +245,16 @@ func updateUserAvatar(c *fiber.Ctx) error {
 }
 
 type updateUserFullnameRequest struct {
-	Fullname string `json:"fullname" validate:"required"`
+	Fullname string `json:"fullname"`
 }
 
-func updateUserFullname(c *fiber.Ctx) error {
+func (s *Server) updateUserFullname(c *fiber.Ctx) error {
 	req := new(updateUserFullnameRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
 
-	user, err := db.UpdateUserFullname(c.Context(), database.UpdateUserFullnameParams{
+	user, err := s.db.UpdateUserFullname(c.Context(), database.UpdateUserFullnameParams{
 		ID:       c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID,
 		Fullname: req.Fullname,
 	})
@@ -265,23 +262,20 @@ func updateUserFullname(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusBadRequest).JSON(newUserResponse(user))
+	return c.Status(fiber.StatusCreated).JSON(newUserResponse(user))
 }
 
 type updateUserStatusRequest struct {
-	Status string `json:"status" validate:"required"`
+	Status string `json:"status"`
 }
 
-func updateUserStatus(c *fiber.Ctx) error {
+func (s *Server) updateUserStatus(c *fiber.Ctx) error {
 	req := new(updateUserStatusRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
 
-	user, err := db.UpdateUserStatus(c.Context(), database.UpdateUserStatusParams{
+	user, err := s.db.UpdateUserStatus(c.Context(), database.UpdateUserStatusParams{
 		ID:     c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID,
 		Status: req.Status,
 	})
@@ -293,19 +287,16 @@ func updateUserStatus(c *fiber.Ctx) error {
 }
 
 type updateUserBioRequest struct {
-	Bio string `json:"bio" validate:"required"`
+	Bio string `json:"bio"`
 }
 
-func updateUserBio(c *fiber.Ctx) error {
+func (s *Server) updateUserBio(c *fiber.Ctx) error {
 	req := new(updateUserBioRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
 
-	user, err := db.UpdateUserBio(c.Context(), database.UpdateUserBioParams{
+	user, err := s.db.UpdateUserBio(c.Context(), database.UpdateUserBioParams{
 		ID:  c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID,
 		Bio: req.Bio,
 	})
@@ -322,17 +313,17 @@ type deleteUserRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
-func deleteUser(c *fiber.Ctx) error {
+func (s *Server) deleteUser(c *fiber.Ctx) error {
 	req := new(deleteUserRequest)
 	if err := c.BodyParser(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := validate.Validate(req); err != nil {
+	if err := s.validator.Validate(req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	sessID := c.Locals(middleware.AuthPayloadKey).(*token.Payload).UserID
-	user, err := db.GetUserByID(c.Context(), int32(sessID))
+	user, err := s.db.GetUserByID(c.Context(), int32(sessID))
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
@@ -341,24 +332,25 @@ func deleteUser(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusUnauthorized, err.Error())
 	}
 
-	err = db.DeleteJokesByAuthor(c.Context(), user.Username)
+	err = s.db.DeleteJokesByAuthor(c.Context(), user.Username)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
-	err = db.DeleteUser(c.Context(), int32(sessID))
+	err = s.db.DeleteUser(c.Context(), int32(sessID))
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
+
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // !DANGEROUS FUNCTION FOR TEST ONLY!
-func deleteAllUsers(c *fiber.Ctx) error {
-	err := db.DeleteAllJokes(c.Context())
+func (s *Server) deleteAllUsers(c *fiber.Ctx) error {
+	err := s.db.DeleteAllJokes(c.Context())
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	err = db.DeleteAllUsers(c.Context())
+	err = s.db.DeleteAllUsers(c.Context())
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
