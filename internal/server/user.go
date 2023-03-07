@@ -19,6 +19,7 @@ type userResponse struct {
 	ID        int32     `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
+	Avatar    string    `json:"avatar"`
 	Fullname  string    `json:"fullname"`
 	Bio       string    `json:"bio"`
 	Status    string    `json:"status"`
@@ -32,6 +33,7 @@ func newUserResponse(user database.User) userResponse {
 		user.ID,
 		user.Username,
 		user.Email,
+		user.Avatar,
 		user.Fullname,
 		user.Bio,
 		user.Status,
