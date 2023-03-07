@@ -3,11 +3,12 @@ INSERT INTO users(
     username,
     email,
     hashed_password,
+    avatar,
     fullname,
     status,
     bio
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7
 ) RETURNING *;
 
 -- GET QUERIES
@@ -35,6 +36,12 @@ OFFSET $2;
 -- name: UpdateUserPassword :one
 UPDATE users
 SET hashed_password = $2
+WHERE id = $1
+RETURNING *;
+
+-- name: UpdateUserAvatar :one
+UPDATE users
+SET avatar = $2
 WHERE id = $1
 RETURNING *;
 

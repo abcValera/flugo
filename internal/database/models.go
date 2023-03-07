@@ -23,6 +23,7 @@ type User struct {
 	Username       string    `json:"username"`
 	Email          string    `json:"email"`
 	HashedPassword string    `json:"hashed_password"`
+	Avatar         string    `json:"avatar"`
 	Fullname       string    `json:"fullname"`
 	Bio            string    `json:"bio"`
 	Status         string    `json:"status"`

@@ -10,6 +10,14 @@ processes = []
 [experimental]
   auto_rollback = true
 
+[build]
+  dockerfile = "./deploy/Dockerfile"
+
+[mounts]
+source="flugo_data"
+destination="/uploads"
+
+
 [[services]]
   http_checks = []
   internal_port = 3000

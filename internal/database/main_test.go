@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/abc_valera/flugo/config"
+	"github.com/abc_valera/flugo/internal/config"
 	_ "github.com/lib/pq"
 )
 
