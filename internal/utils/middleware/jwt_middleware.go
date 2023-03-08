@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/abc_valera/flugo/internal/token"
+	"github.com/abc_valera/flugo/internal/utils/token"
 	"github.com/gofiber/fiber/v2"
 )
 

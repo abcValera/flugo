@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/abc_valera/flugo/internal/database"
-	"github.com/abc_valera/flugo/internal/middleware"
-	"github.com/abc_valera/flugo/internal/token"
+	"github.com/abc_valera/flugo/internal/utils/middleware"
+	"github.com/abc_valera/flugo/internal/utils/token"
 	"github.com/gofiber/fiber/v2"
 )
 

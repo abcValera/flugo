@@ -10,9 +10,6 @@ processes = []
 [experimental]
   auto_rollback = true
 
-[build]
-  dockerfile = "./deploy/Dockerfile"
-
 [mounts]
 source="flugo_data"
 destination="/uploads"

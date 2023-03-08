@@ -20,7 +20,7 @@ migrate_down:
 
 # Docker commands
 build_flugo-api_image:
-	docker build -f ./deploy/Dockerfile -t flugo:latest .
+	docker build -t flugo:latest .
 
 # Go commands
 build_flugo-api:

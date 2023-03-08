@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"github.com/abc_valera/flugo/internal/database"
-	"github.com/abc_valera/flugo/internal/middleware"
-	"github.com/abc_valera/flugo/internal/token"
-	"github.com/abc_valera/flugo/internal/utils"
+	"github.com/abc_valera/flugo/internal/utils/middleware"
+	"github.com/abc_valera/flugo/internal/utils/password"
+	"github.com/abc_valera/flugo/internal/utils/token"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -59,7 +60,7 @@ func (s *Server) createUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	hashedPassword, err := utils.HashPassword(req.Password)
+	hashedPassword, err := password.HashPassword(req.Password)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -104,7 +105,7 @@ func (s *Server) loginUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	err = utils.CheckPassword(req.Password, user.HashedPassword)
+	err = password.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
 		return fiber.NewError(http.StatusUnauthorized, err.Error())
 	}
@@ -201,11 +202,11 @@ func (s *Server) updateUserPassword(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := utils.CheckPassword(req.OldPassword, oldUser.HashedPassword); err != nil {
+	if err := password.CheckPassword(req.OldPassword, oldUser.HashedPassword); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	hashedPassword, err := password.HashPassword(req.NewPassword)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
@@ -330,7 +331,7 @@ func (s *Server) deleteUser(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusInternalServerError, err.Error())
 	}
 
-	if err := utils.CheckPassword(req.Password, user.HashedPassword); err != nil {
+	if err := password.CheckPassword(req.Password, user.HashedPassword); err != nil {
 		return fiber.NewError(http.StatusUnauthorized, err.Error())
 	}
 
